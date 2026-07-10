@@ -1,0 +1,5 @@
+@import 'tailwindcss';
+
+/* Activity modules live outside the renderer root — tell Tailwind to scan
+   them, or their classes silently vanish from the build. */
+@source '../../activities';
