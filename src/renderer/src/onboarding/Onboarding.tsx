@@ -56,8 +56,10 @@ export default function Onboarding(): React.JSX.Element {
             </p>
             <div className="rounded-lg border border-neutral-800 bg-neutral-950 p-4 text-xs leading-relaxed text-neutral-400">
               <span className="font-medium text-neutral-200">Private by construction.</span> GodFirst
-              is fully offline: no account, no telemetry, no update checks, no network requests —
-              ever. Everything, including the scripture text, lives on this machine.
+              is fully offline: no account, no telemetry, and everything — including the
+              scripture text — lives on this machine. Its one optional network touch is a
+              once-a-day check of the latest version number (nothing about you is sent);
+              you can switch that off in Settings for a completely offline app.
             </div>
             <p className="text-xs text-neutral-500">
               You always stay in control: OS escapes like the power button are never blocked, and

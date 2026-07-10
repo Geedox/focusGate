@@ -25,6 +25,7 @@ const api = {
       ipcRenderer.invoke(IPC.openAccessibilitySettings),
     requestCameraAccess: (): Promise<boolean> => ipcRenderer.invoke(IPC.requestCameraAccess),
     openCameraSettings: (): Promise<void> => ipcRenderer.invoke(IPC.openCameraSettings),
+    openDownloadPage: (): Promise<void> => ipcRenderer.invoke(IPC.openDownloadPage),
     donate: (): Promise<DonateResult> => ipcRenderer.invoke(IPC.appDonate),
     shareStreak: (png: Uint8Array): Promise<boolean> =>
       ipcRenderer.invoke(IPC.appShareStreak, png)
@@ -37,6 +38,8 @@ const api = {
       ipcRenderer.invoke(IPC.settingsSetScripture, kind),
     setSessionMinutes: (minutes: number): Promise<void> =>
       ipcRenderer.invoke(IPC.settingsSetSessionMinutes, minutes),
+    setUpdateCheck: (enabled: boolean): Promise<void> =>
+      ipcRenderer.invoke(IPC.settingsSetUpdateCheck, enabled),
     setPlanMonths: (months: number): Promise<void> =>
       ipcRenderer.invoke(IPC.settingsSetPlanMonths, months),
     setSchedule: (config: ScheduleConfig): Promise<void> =>

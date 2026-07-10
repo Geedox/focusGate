@@ -10,6 +10,7 @@ import {
   schedulerEvents
 } from './scheduler'
 import { currentStreak } from './scripture'
+import { DOWNLOAD_PAGE, getAvailableUpdate, updateEvents } from './update-check'
 import { openSettingsWindow } from './settings-window'
 
 let tray: Tray | null = null
@@ -66,6 +67,7 @@ export function createTray(): Tray {
   refreshTrayMenu()
   lockEvents.on('changed', refreshTrayMenu)
   schedulerEvents.on('changed', refreshTrayMenu)
+  updateEvents.on('changed', refreshTrayMenu)
   return tray
 }
 
@@ -83,6 +85,18 @@ export function refreshTrayMenu(): void {
       enabled: false
     },
     { type: 'separator' },
+    ...(getAvailableUpdate() !== null
+      ? [
+          {
+            label: `\u2b06 Update available (v${getAvailableUpdate()}) \u2014 download`,
+            click: (): void => {
+              const { shell } = require('electron') as typeof import('electron')
+              void shell.openExternal(DOWNLOAD_PAGE)
+            }
+          },
+          { type: 'separator' as const }
+        ]
+      : []),
     {
       label: 'Lock me now',
       enabled: !locked,

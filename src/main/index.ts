@@ -6,6 +6,7 @@ import { registerIpcHandlers } from './ipc'
 import { endLock, isLocked, restoreLockIfNeeded } from './lock'
 import { isOnboardingComplete, openOnboardingWindow } from './onboarding-window'
 import { initScheduler } from './scheduler'
+import { initUpdateCheck } from './update-check'
 import { openSettingsWindow } from './settings-window'
 import { maybeRunAutotest } from './autotest'
 
@@ -67,6 +68,7 @@ if (!gotTheLock) {
     // "locked" from the very first tick (crossed triggers get consumed,
     // not queued on top).
     initScheduler()
+    initUpdateCheck()
 
     const mode = wasLaunchedHidden() ? 'auto-started at login' : 'started manually'
     console.log(`[godfirst] running in background (tray only), ${mode}`)

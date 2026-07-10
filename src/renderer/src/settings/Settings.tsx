@@ -5,6 +5,7 @@ import ShareStreakButton from '../components/ShareStreakButton'
 import {
   AutostartToggle,
   CameraSection,
+  UpdateSection,
   PasscodeSection,
   PlanSection,
   ReadingSection,
@@ -65,6 +66,7 @@ export default function Settings(): React.JSX.Element {
       <ReadingSection view={view} onChanged={reload} />
       <PlanSection view={view} onChanged={reload} />
       <CameraSection view={view} onChanged={reload} />
+      <UpdateSection view={view} onChanged={reload} />
       <ScheduleSection schedule={view.schedule} onChanged={reload} />
       <PasscodeSection hasPasscode={view.hasPasscode} onChanged={reload} />
 

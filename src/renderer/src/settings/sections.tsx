@@ -339,3 +339,50 @@ export function PasscodeSection({
     </form>
   )
 }
+
+export function UpdateSection({
+  view,
+  onChanged
+}: {
+  view: SettingsView
+  onChanged: () => void
+}): React.JSX.Element {
+  return (
+    <div className="flex flex-col gap-2">
+      <h2 className="text-sm font-medium">Updates</h2>
+      {view.availableUpdate !== null && (
+        <div className="flex items-center justify-between rounded-lg border border-emerald-900/60 bg-emerald-950/30 px-4 py-3">
+          <span className="text-sm text-emerald-200">
+            \u2b06 GodFirst v{view.availableUpdate} is available (you have v{view.appVersion})
+          </span>
+          <button
+            onClick={() => void window.godfirst.app.openDownloadPage()}
+            className="rounded bg-emerald-100 px-3 py-1.5 text-xs font-medium text-emerald-950 hover:bg-white"
+          >
+            Download
+          </button>
+        </div>
+      )}
+      <label className="flex cursor-pointer items-center justify-between text-sm">
+        <span>
+          Check for updates once a day
+          <span className="ml-2 block text-xs text-neutral-500">
+            The app's only network use: it fetches the latest version number \u2014 nothing about
+            you is ever sent. Turn it off for a fully offline app.
+          </span>
+        </span>
+        <input
+          type="checkbox"
+          checked={view.updateCheckEnabled}
+          onChange={(e) => {
+            void window.godfirst.settings.setUpdateCheck(e.target.checked).then(onChanged)
+          }}
+          className="h-4 w-4 shrink-0 accent-neutral-300"
+        />
+      </label>
+      {view.availableUpdate === null && (
+        <p className="text-xs text-neutral-600">You're on v{view.appVersion}.</p>
+      )}
+    </div>
+  )
+}

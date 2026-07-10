@@ -16,6 +16,8 @@ export const IPC = {
   onboardingFinish: 'onboarding:finish',
   openAccessibilitySettings: 'app:open-accessibility-settings',
   openCameraSettings: 'app:open-camera-settings',
+  openDownloadPage: 'app:open-download-page',
+  settingsSetUpdateCheck: 'settings:set-update-check',
   lockGetContext: 'lock:get-context',
   lockGetSession: 'lock:get-session',
   lockChooseScripture: 'lock:choose-scripture',
@@ -139,6 +141,10 @@ export interface StoreSchema extends AppSettings {
   activeUseMs: number
   /** First-run wizard completed; until true it auto-opens on boot. */
   onboardingComplete: boolean
+  /** Allow the once-a-day version-number check (the app's only network use). */
+  updateCheckEnabled: boolean
+  /** Newer version detected by the check (e.g. "0.2.0"); null = up to date. */
+  availableUpdate: string | null
 }
 
 export const DEFAULT_STORE: StoreSchema = {
@@ -165,7 +171,9 @@ export const DEFAULT_STORE: StoreSchema = {
   lastScheduledFire: null,
   /** Milliseconds of active use accumulated since the last lock. */
   activeUseMs: 0,
-  onboardingComplete: false
+  onboardingComplete: false,
+  updateCheckEnabled: true,
+  availableUpdate: null
 }
 
 /** Reading-plan summary for the settings UI. */
@@ -191,6 +199,9 @@ export interface SettingsView {
   cameraGranted: boolean
   /** Reading streak: effective current (0 if a day was missed) and best. */
   streak: { current: number; best: number }
+  updateCheckEnabled: boolean
+  availableUpdate: string | null
+  appVersion: string
 }
 
 /** One verse as shown in a lock session. */

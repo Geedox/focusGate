@@ -16,6 +16,7 @@ import { finishOnboarding } from './onboarding-window'
 import { isValidPasscode, MIN_PASSCODE_LENGTH } from './passcode'
 import { parseTimeOfDay } from './schedule-core'
 import { pauseForOneHour, rescheduleFromConfig, resumeSchedule } from './scheduler'
+import { DOWNLOAD_PAGE, getAvailableUpdate } from './update-check'
 import {
   chooseCategory,
   chooseScripture,
@@ -53,8 +54,21 @@ export function registerIpcHandlers(): void {
       plan: getPlanSummaries(),
       schedule: store.get('schedule'),
       cameraGranted: isCameraGranted(),
-      streak: currentStreak()
+      streak: currentStreak(),
+      updateCheckEnabled: store.get('updateCheckEnabled'),
+      availableUpdate: getAvailableUpdate(),
+      appVersion: app.getVersion()
     }
+  })
+
+  ipcMain.handle(IPC.settingsSetUpdateCheck, (_event, enabled: unknown): void => {
+    if (typeof enabled !== 'boolean') return
+    store.set('updateCheckEnabled', enabled)
+    if (!enabled) store.set('availableUpdate', null) // no nagging when off
+  })
+
+  ipcMain.handle(IPC.openDownloadPage, (): void => {
+    void shell.openExternal(DOWNLOAD_PAGE)
   })
 
   ipcMain.handle(IPC.settingsSetPlanMonths, (_event, months: unknown): void => {

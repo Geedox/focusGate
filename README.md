@@ -4,9 +4,11 @@ A fully offline desktop app (macOS + Windows) that runs quietly in the tray
 and, on a schedule, locks the screen behind a fullscreen overlay until you
 complete a required activity — v1: reading a Bible or Quran passage.
 
-**Privacy:** GodFirst makes no network requests, ever. No telemetry, no
-accounts, no update checks. All data (settings, reading progress, lock state,
-the scripture text itself) lives locally on your machine. Scripture sources
+**Privacy:** GodFirst sends nothing about you, ever — no telemetry, no
+accounts. All data (settings, reading progress, lock state, the scripture
+text itself) lives locally on your machine. Its single optional network
+touch is a once-a-day check of the latest release version number (GitHub
+Releases), toggleable off in Settings for a fully offline app. Scripture sources
 and licenses: [NOTICES.md](NOTICES.md).
 
 ## Features (v1 complete)
