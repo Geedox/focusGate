@@ -9,7 +9,6 @@ export const IPC = {
   settingsSetSessionMinutes: 'settings:set-session-minutes',
   settingsSetPlanMonths: 'settings:set-plan-months',
   settingsSetSchedule: 'settings:set-schedule',
-  securitySetPasscode: 'security:set-passcode',
   appCommand: 'app:command',
   appDonate: 'app:donate',
   appShareStreak: 'app:share-streak',
@@ -23,7 +22,8 @@ export const IPC = {
   lockChooseScripture: 'lock:choose-scripture',
   lockChooseCategory: 'lock:choose-category',
   lockActivityComplete: 'lock:activity-complete',
-  lockVerifyPasscode: 'lock:verify-passcode',
+  lockUnlock: 'lock:unlock',
+  lockForceUnlock: 'lock:force-unlock',
   lockDevUnlock: 'lock:dev-unlock',
   requestCameraAccess: 'app:request-camera-access'
 } as const
@@ -88,15 +88,11 @@ export interface PlanProgress {
   versesRead: number
 }
 
-/** Scrypt-hashed recovery passcode. Never stored in plaintext. */
-export interface PasscodeRecord {
-  saltHex: string
-  hashHex: string
-}
-
 export interface BreakGlassEntry {
   at: string // ISO timestamp
-  method: 'passcode'
+  /** 'os-password' = unlocked with the OS login password; 'force' = the
+   *  safety escape used because password verification was unavailable. */
+  method: 'os-password' | 'force'
 }
 
 /** How the user said they felt after a completed session. */
@@ -123,7 +119,6 @@ export interface SessionLogEntry {
 export interface StoreSchema extends AppSettings {
   /** True while a lock is (or should be) active — the watchdog flag. */
   lockActive: boolean
-  passcode: PasscodeRecord | null
   breakGlassLog: BreakGlassEntry[]
   /** Recently shown passage ids per text, to avoid immediate repeats. */
   recentPassages: Record<ScriptureKind, string[]>
@@ -155,7 +150,6 @@ export const DEFAULT_STORE: StoreSchema = {
   sessionMinutes: 3,
   planMonths: 12,
   lockActive: false,
-  passcode: null,
   breakGlassLog: [],
   recentPassages: { bible: [], quran: [] },
   readingPlan: {
@@ -189,7 +183,6 @@ export interface PlanSummary {
 /** What the settings UI needs to render. */
 export interface SettingsView {
   launchAtLogin: boolean
-  hasPasscode: boolean
   scripture: ScriptureKind | null
   sessionMinutes: number
   planMonths: number
@@ -254,7 +247,9 @@ export type LockSessionState =
 
 /** What a lock overlay window needs to render. */
 export interface LockContext {
-  hasPasscode: boolean
+  /** OS account name, shown on the emergency-unlock field so the user knows
+   *  it's their own computer password. Empty string if it can't be read. */
+  osUsername: string
   isDev: boolean
   /**
    * OS camera permission already granted. When false the overlay must NOT
@@ -264,7 +259,10 @@ export interface LockContext {
   cameraGranted: boolean
 }
 
-export interface PasscodeAttemptResult {
+export interface UnlockResult {
   ok: boolean
   error?: string
+  /** True when OS-password verification couldn't run/decide on this machine.
+   *  The lock screen then offers the guaranteed force-escape (never trap). */
+  unavailable?: boolean
 }

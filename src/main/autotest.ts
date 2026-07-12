@@ -2,7 +2,6 @@ import { app, BrowserWindow } from 'electron'
 import { writeFileSync } from 'node:fs'
 import { endLock, isLocked, startLock } from './lock'
 import { getSchedulerStatus, pauseForOneHour, rescheduleFromConfig, resumeSchedule } from './scheduler'
-import { hasPasscode, setPasscode } from './security'
 import { finishOnboarding } from './onboarding-window'
 import { openSettingsWindow } from './settings-window'
 import { PRELOAD_PATH, loadRenderer } from './windows'
@@ -44,10 +43,6 @@ export function maybeRunAutotest(): void {
       fail(`step threw: ${String(err)}`)
     }
   }
-
-  // Locks refuse to start without a recovery passcode (the only escape) —
-  // give the test store one.
-  if (!hasPasscode()) setPasscode('autotest-passcode')
 
   console.log(`[autotest] mode=${mode}`)
 

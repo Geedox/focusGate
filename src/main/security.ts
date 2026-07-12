@@ -1,20 +1,7 @@
 import { store } from './store'
-import { hashPasscode, verifyPasscode as verifyAgainstRecord } from './passcode'
 import type { BreakGlassEntry } from '@shared/ipc'
 
 const BREAK_GLASS_LOG_CAP = 100
-
-export function hasPasscode(): boolean {
-  return store.get('passcode') !== null
-}
-
-export function setPasscode(passcode: string): void {
-  store.set('passcode', hashPasscode(passcode))
-}
-
-export function verifyPasscode(passcode: unknown): boolean {
-  return verifyAgainstRecord(passcode, store.get('passcode'))
-}
 
 /** Local-only audit trail of emergency escapes (required by design: the
  *  break-glass path must be visible to the user, not silent). */

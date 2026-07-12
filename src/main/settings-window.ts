@@ -4,8 +4,9 @@ import { PRELOAD_PATH, loadRenderer } from './windows'
 let settingsWindow: BrowserWindow | null = null
 
 /**
- * Minimal settings window (Phase 3: recovery passcode + start-at-login).
- * Phase 6 expands it with schedule, scripture choice, and onboarding.
+ * The settings window: start-at-login, scripture choice, schedule, camera,
+ * and update preferences. (There is no passcode setting — the break-glass
+ * escape is the user's own OS login password.)
  */
 export function openSettingsWindow(): void {
   if (settingsWindow && !settingsWindow.isDestroyed()) {

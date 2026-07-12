@@ -1,20 +1,15 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { SettingsView } from '@shared/ipc'
 import DonateButton from '../components/DonateButton'
-import {
-  AutostartToggle,
-  PasscodeSection,
-  ReadingSection,
-  ScheduleSection
-} from '../settings/sections'
+import { AutostartToggle, ReadingSection, ScheduleSection } from '../settings/sections'
 
 /**
- * First-run wizard. Five steps; the recovery passcode step cannot be
- * skipped — an app that can lock your screen must never exist without its
- * break-glass escape configured.
+ * First-run wizard. No passcode step: the break-glass escape is the user's own
+ * OS login password, which always exists — there is nothing to set up or
+ * forget (an earlier custom-passcode step is what used to strand people).
  */
 
-const STEPS = ['Welcome', 'Recovery passcode', 'Camera', 'Reading', 'Schedule', 'Finish'] as const
+const STEPS = ['Welcome', 'Camera', 'Reading', 'Schedule', 'Finish'] as const
 
 export default function Onboarding(): React.JSX.Element {
   const [step, setStep] = useState(0)
@@ -28,7 +23,6 @@ export default function Onboarding(): React.JSX.Element {
 
   if (!view) return <div className="p-8 text-neutral-500">Loading…</div>
 
-  const canContinue = step !== 1 || view.hasPasscode
   const isLast = step === STEPS.length - 1
 
   return (
@@ -62,31 +56,17 @@ export default function Onboarding(): React.JSX.Element {
               you can switch that off in Settings for a completely offline app.
             </div>
             <p className="text-xs text-neutral-500">
-              You always stay in control: OS escapes like the power button are never blocked, and
-              you're about to set an emergency exit of your own.
+              You always stay in control. If a lock ever appears at a terrible moment, your{' '}
+              <span className="text-neutral-300">emergency exit is your own computer login
+              password</span> — the same one you use to sign in. Nothing new to set up or
+              remember, and OS escapes like the power button are never blocked either.
             </p>
           </div>
         )}
 
-        {step === 1 && (
-          <div className="flex flex-col gap-4">
-            <h1 className="text-2xl font-semibold tracking-tight">Your emergency exit</h1>
-            <p className="text-sm leading-relaxed text-neutral-300">
-              If a lock ever appears at a terrible moment, the{' '}
-              <span className="text-neutral-100">recovery passcode</span> frees you immediately —
-              it's the only way out besides finishing the reading, so this step can't be skipped.
-              GodFirst will refuse to lock at all until one is set.
-            </p>
-            <PasscodeSection hasPasscode={view.hasPasscode} onChanged={reload} />
-            {view.hasPasscode && (
-              <p className="text-xs text-green-400">Passcode set — you can continue.</p>
-            )}
-          </div>
-        )}
+        {step === 1 && <CameraStep granted={view.cameraGranted} onChanged={reload} />}
 
-        {step === 2 && <CameraStep granted={view.cameraGranted} onChanged={reload} />}
-
-        {step === 3 && (
+        {step === 2 && (
           <div className="flex flex-col gap-4">
             <h1 className="text-2xl font-semibold tracking-tight">What you'll read</h1>
             <ReadingSection view={view} onChanged={reload} />
@@ -98,7 +78,7 @@ export default function Onboarding(): React.JSX.Element {
           </div>
         )}
 
-        {step === 4 && (
+        {step === 3 && (
           <div className="flex flex-col gap-4">
             <h1 className="text-2xl font-semibold tracking-tight">When it locks</h1>
             <div className="rounded-lg border border-amber-900/50 bg-amber-950/20 p-4 text-xs leading-relaxed text-neutral-300">
@@ -119,7 +99,7 @@ export default function Onboarding(): React.JSX.Element {
           </div>
         )}
 
-        {step === 5 && (
+        {step === 4 && (
           <div className="flex flex-col gap-4">
             <h1 className="text-2xl font-semibold tracking-tight">Last things</h1>
             <AutostartToggle view={view} onChanged={reload} />
@@ -144,8 +124,8 @@ export default function Onboarding(): React.JSX.Element {
               <span className="font-medium text-emerald-300">One more thing:</span> when you click
               Finish, GodFirst will run your <span className="font-medium">first reading session
               right now</span> — a real lock, exactly as it will happen on your schedule — so you
-              see the whole flow once and start your streak on day one. (Your recovery passcode
-              works if you need out.)
+              see the whole flow once and start your streak on day one. (Your computer login
+              password unlocks it if you need out.)
             </div>
             <p className="text-sm text-neutral-300">
               After that, GodFirst lives in the tray — this window won't open again on its own.
@@ -175,9 +155,7 @@ export default function Onboarding(): React.JSX.Element {
             if (isLast) void window.godfirst.app.finishOnboarding()
             else setStep((s) => s + 1)
           }}
-          disabled={!canContinue}
           className="rounded bg-neutral-100 px-5 py-1.5 text-sm font-medium text-neutral-900 hover:bg-white disabled:opacity-40"
-          title={canContinue ? undefined : 'Set a recovery passcode first'}
         >
           {isLast ? 'Finish' : 'Continue'}
         </button>

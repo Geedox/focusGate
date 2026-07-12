@@ -1,7 +1,7 @@
 {
   "name": "godfirst",
   "productName": "GodFirst",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Offline desktop app that locks your screen on a schedule until you complete a required activity.",
   "main": "out/main/index.js",
   "author": "Samuel",

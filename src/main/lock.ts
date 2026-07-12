@@ -1,6 +1,5 @@
 import { BrowserWindow, app, globalShortcut, powerSaveBlocker, screen } from 'electron'
 import { EventEmitter } from 'node:events'
-import { hasPasscode } from './security'
 import { store } from './store'
 import { PRELOAD_PATH, loadRenderer } from './windows'
 
@@ -18,7 +17,7 @@ import { PRELOAD_PATH, loadRenderer } from './windows'
 
 export type UnlockReason =
   | 'activity-complete' // the real path
-  | 'break-glass-passcode'
+  | 'break-glass' // OS-password or force escape
   | 'dev'
   | 'error' // fail-open teardown
 
@@ -36,13 +35,10 @@ export function isLocked(): boolean {
 
 export function startLock(reason: 'manual' | 'restore' | 'scheduled' | 'active-use'): void {
   if (locked) return
-  // The recovery passcode is the ONLY break-glass escape, so a lock must
-  // never start without one set. (Onboarding makes it mandatory; this guard
-  // covers "Lock me now" pressed before onboarding finishes.)
-  if (!hasPasscode()) {
-    console.error('[godfirst] refusing to lock: no recovery passcode set')
-    return
-  }
+  // The break-glass escape is the user's own OS login password, which always
+  // exists — so, unlike the old custom-passcode design, there is no state in
+  // which a lock could start with no way out. If OS verification is ever
+  // unavailable at unlock time, the lock screen offers a force-escape.
   console.log(`[godfirst] lock starting (${reason})`)
   locked = true
   try {

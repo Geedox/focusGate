@@ -6,8 +6,8 @@ import { SCRIPTURE_THEMES } from '@activities/scripture/theme'
 
 /**
  * Primary-display lock overlay. Flow: choose text (if unset) → choose
- * category → activity (start → read → check → mood). The recovery passcode
- * is the only break-glass escape and is always reachable at the bottom.
+ * category → activity (start → read → check → mood). The break-glass escape
+ * (the user's own OS login password) is always reachable at the bottom.
  */
 export default function LockScreen(): React.JSX.Element {
   const [ctx, setCtx] = useState<LockContext | null>(null)
@@ -138,26 +138,43 @@ export default function LockScreen(): React.JSX.Element {
         )}
       </div>
 
-      <EmergencyUnlock hasPasscode={ctx?.hasPasscode ?? false} />
+      <EmergencyUnlock osUsername={ctx?.osUsername ?? ''} />
     </div>
   )
 }
 
-function EmergencyUnlock({ hasPasscode }: { hasPasscode: boolean }): React.JSX.Element {
+/** Reveal the force-escape once the OS-password path clearly can't help. */
+const FAILED_ATTEMPTS_BEFORE_FORCE = 5
+
+function EmergencyUnlock({ osUsername }: { osUsername: string }): React.JSX.Element {
   const [open, setOpen] = useState(false)
-  const [passcode, setPasscode] = useState('')
+  const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [failures, setFailures] = useState(0)
+  const [showForce, setShowForce] = useState(false)
 
   const submit = (e: React.FormEvent): void => {
     e.preventDefault()
-    if (passcode.length === 0) return
-    void window.godfirst.lock.verifyPasscode(passcode).then((result) => {
-      if (!result.ok) {
-        setError(result.error ?? 'Incorrect passcode.')
-        setPasscode('')
+    if (password.length === 0) return
+    void window.godfirst.lock.unlock(password).then((result) => {
+      if (result.ok) return // main tears down this window on success.
+      setPassword('')
+      setError(result.error ?? 'Incorrect password.')
+      if (result.unavailable) {
+        // Automatic verification can't decide — never trap: offer the escape.
+        setShowForce(true)
+        return
       }
-      // On success main tears down this window; nothing to do here.
+      setFailures((n) => {
+        const next = n + 1
+        if (next >= FAILED_ATTEMPTS_BEFORE_FORCE) setShowForce(true)
+        return next
+      })
     })
+  }
+
+  const forceUnlock = (): void => {
+    void window.godfirst.lock.forceUnlock()
   }
 
   return (
@@ -167,13 +184,15 @@ function EmergencyUnlock({ hasPasscode }: { hasPasscode: boolean }): React.JSX.E
           <input
             autoFocus
             type="password"
-            value={passcode}
+            value={password}
             onChange={(e) => {
-              setPasscode(e.target.value)
+              setPassword(e.target.value)
               setError(null)
             }}
-            placeholder="Recovery passcode"
-            className="w-64 rounded border border-neutral-700 bg-neutral-900 px-3 py-2 text-center text-sm outline-none focus:border-neutral-500"
+            placeholder={
+              osUsername ? `Password for ${osUsername}` : 'Your computer login password'
+            }
+            className="w-72 rounded border border-neutral-700 bg-neutral-900 px-3 py-2 text-center text-sm outline-none focus:border-neutral-500"
           />
           {error && <div className="text-xs text-red-400">{error}</div>}
           <div className="flex gap-3 text-xs text-neutral-500">
@@ -185,22 +204,37 @@ function EmergencyUnlock({ hasPasscode }: { hasPasscode: boolean }): React.JSX.E
               className="hover:text-neutral-300"
               onClick={() => {
                 setOpen(false)
-                setPasscode('')
+                setPassword('')
                 setError(null)
               }}
             >
               Cancel
             </button>
           </div>
+          {showForce && (
+            <div className="mt-1 flex flex-col items-center gap-1 text-center">
+              <p className="max-w-xs text-[11px] leading-relaxed text-neutral-500">
+                Can't get in with your computer password? Use the safety escape below — it
+                unlocks now and turns off auto-start so this won't happen again.
+              </p>
+              <button
+                type="button"
+                onClick={forceUnlock}
+                className="text-xs text-amber-500/80 underline hover:text-amber-400"
+              >
+                Force unlock &amp; disable auto-lock
+              </button>
+            </div>
+          )}
         </form>
-      ) : hasPasscode ? (
+      ) : (
         <button
           onClick={() => setOpen(true)}
           className="text-xs text-neutral-700 underline hover:text-neutral-400"
         >
-          Emergency unlock (recovery passcode)
+          Emergency unlock (your computer password)
         </button>
-      ) : null}
+      )}
     </div>
   )
 }

@@ -6,7 +6,6 @@ import {
   AutostartToggle,
   CameraSection,
   UpdateSection,
-  PasscodeSection,
   PlanSection,
   ReadingSection,
   ScheduleSection
@@ -68,7 +67,17 @@ export default function Settings(): React.JSX.Element {
       <CameraSection view={view} onChanged={reload} />
       <UpdateSection view={view} onChanged={reload} />
       <ScheduleSection schedule={view.schedule} onChanged={reload} />
-      <PasscodeSection hasPasscode={view.hasPasscode} onChanged={reload} />
+
+      <div>
+        <h2 className="text-sm font-medium">Emergency unlock</h2>
+        <p className="mt-1 text-xs leading-relaxed text-neutral-500">
+          If a lock appears at a bad moment, unlock it with your{' '}
+          <span className="text-neutral-300">computer login password</span> — the same one you use
+          to sign in. GodFirst stores no passcode of its own, so there's nothing extra to set or
+          forget. If that password can't be verified for any reason, the lock screen offers a
+          one-click force-unlock so you're never stuck.
+        </p>
+      </div>
 
       <div className="border-t border-neutral-800 pt-5">
         <p className="text-xs text-neutral-500">

@@ -6,14 +6,14 @@ import {
   type DonateResult,
   type LockContext,
   type LockSessionState,
-  type PasscodeAttemptResult,
   type ScriptureSession,
-  type SettingsView
+  type SettingsView,
+  type UnlockResult
 } from '@shared/ipc'
 import { isAutostartEnabled, setAutostart } from './autostart'
 import { endLock, isLocked, lockEvents, startLock } from './lock'
 import { finishOnboarding } from './onboarding-window'
-import { isValidPasscode, MIN_PASSCODE_LENGTH } from './passcode'
+import { osUsername, verifyOsPassword } from './os-auth'
 import { parseTimeOfDay } from './schedule-core'
 import { pauseForOneHour, rescheduleFromConfig, resumeSchedule } from './scheduler'
 import { DOWNLOAD_PAGE, getAvailableUpdate } from './update-check'
@@ -25,7 +25,7 @@ import {
   getPlanSummaries,
   getSessionState
 } from './scripture'
-import { hasPasscode, logBreakGlass, setPasscode, verifyPasscode } from './security'
+import { logBreakGlass } from './security'
 import { store } from './store'
 import { refreshTrayMenu } from './tray'
 
@@ -47,7 +47,6 @@ export function registerIpcHandlers(): void {
   ipcMain.handle(IPC.settingsGet, (): SettingsView => {
     return {
       launchAtLogin: isAutostartEnabled(),
-      hasPasscode: hasPasscode(),
       scripture: store.get('scripture'),
       sessionMinutes: store.get('sessionMinutes'),
       planMonths: store.get('planMonths'),
@@ -117,21 +116,6 @@ export function registerIpcHandlers(): void {
     if (typeof minutes !== 'number' || !Number.isFinite(minutes)) return
     store.set('sessionMinutes', Math.min(60, Math.max(1, Math.round(minutes))))
   })
-
-  ipcMain.handle(
-    IPC.securitySetPasscode,
-    (_event, current: unknown, next: unknown): PasscodeAttemptResult => {
-      // Changing an existing passcode requires the current one.
-      if (hasPasscode() && !verifyPasscode(current)) {
-        return { ok: false, error: 'Current passcode is incorrect.' }
-      }
-      if (!isValidPasscode(next)) {
-        return { ok: false, error: `Passcode must be at least ${MIN_PASSCODE_LENGTH} characters.` }
-      }
-      setPasscode(next)
-      return { ok: true }
-    }
-  )
 
   ipcMain.handle(IPC.appCommand, (_event, command: unknown): void => {
     const commands: Record<AppCommand, () => void> = {
@@ -204,7 +188,7 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle(IPC.lockGetContext, (): LockContext => {
     return {
-      hasPasscode: hasPasscode(),
+      osUsername: osUsername(),
       isDev: !app.isPackaged,
       cameraGranted: isCameraGranted()
     }
@@ -243,18 +227,41 @@ export function registerIpcHandlers(): void {
     return systemPreferences.askForMediaAccess('camera')
   })
 
-  // Break-glass: recovery passcode (the only escape by design).
-  ipcMain.handle(IPC.lockVerifyPasscode, (_event, passcode: unknown): PasscodeAttemptResult => {
+  // Break-glass: the user's OWN OS login password (no app passcode exists).
+  ipcMain.handle(IPC.lockUnlock, async (_event, password: unknown): Promise<UnlockResult> => {
     if (!isLocked()) return { ok: false, error: 'Not locked.' }
-    if (!hasPasscode()) {
-      return { ok: false, error: 'No recovery passcode is set.' }
+    const result = await verifyOsPassword(password)
+    if (result === 'correct') {
+      logBreakGlass('os-password')
+      endLock('break-glass')
+      return { ok: true }
     }
-    if (!verifyPasscode(passcode)) {
-      return { ok: false, error: 'Incorrect passcode.' }
+    if (result === 'unavailable') {
+      // The checker couldn't run/decide — never trap the user: the renderer
+      // reveals the force-escape when it sees this flag.
+      return {
+        ok: false,
+        unavailable: true,
+        error: "Couldn't verify your password automatically on this machine."
+      }
     }
-    logBreakGlass('passcode')
-    endLock('break-glass-passcode')
-    return { ok: true }
+    return { ok: false, error: 'Incorrect password.' }
+  })
+
+  // Guaranteed safety escape: unlocks and disables auto-start so a lock can
+  // never re-raise on reboot. Offered only when the lock screen has already
+  // determined that automatic password verification can't help (verification
+  // unavailable, or too many failed attempts) — so a reformat is NEVER the
+  // way out again.
+  ipcMain.handle(IPC.lockForceUnlock, (): void => {
+    if (!isLocked()) return
+    logBreakGlass('force')
+    try {
+      setAutostart(false)
+    } catch (err) {
+      console.error('[godfirst] force-unlock could not disable autostart', err)
+    }
+    endLock('break-glass')
   })
 
   // Dev-only unlock button on the overlay; no-op in packaged builds.

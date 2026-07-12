@@ -54,15 +54,20 @@ and licenses: [NOTICES.md](NOTICES.md).
   triggers crossed while paused fire once when the pause ends. The tray
   shows both the next clock lock and the remaining active-use time.
 - **Safety design** — *fail open, never fail locked*: any error tears the
-  overlay down. The **recovery passcode** (salted scrypt hash; mandatory in
-  onboarding) is the break-glass escape, always reachable at the bottom of
-  the lock screen; its use is logged locally. Because it is the only escape,
-  **GodFirst refuses to start a lock while no passcode is set**. A watchdog
-  restores the lock if the app is killed mid-lock.
+  overlay down. The break-glass escape is **your own OS login password** —
+  the same one you use to sign into the machine — verified live at unlock
+  time (macOS: `dscl -authonly`; Windows: .NET `ValidateCredentials`).
+  GodFirst stores **no passcode of its own**, so there is nothing extra to
+  set up or forget (an earlier custom-passcode design is what used to strand
+  people). If password verification can't run or decide on a machine (e.g. a
+  Windows Hello PIN-only account), or after several failed attempts, the lock
+  screen reveals a one-click **force-unlock** that also disables auto-start —
+  so a reformat is never the way out. Every escape is logged locally. A
+  watchdog restores the lock if the app is killed mid-lock.
 - **First-run onboarding** — the only window that ever auto-opens: privacy
-  statement, mandatory passcode setup, camera permission (optional,
-  presence check), scripture + schedule config, start-at-login
-  confirmation, macOS Accessibility note.
+  statement, camera permission (optional, presence check), scripture +
+  schedule config, start-at-login confirmation, macOS Accessibility note.
+  (No passcode step — your OS password is the escape.)
 
 ## Development
 
@@ -89,8 +94,8 @@ npm run dev        # start Electron in dev mode (tray icon appears; no window)
 
 ```bash
 npm run typecheck  # strict TS across main/preload/renderer
-npm test           # unit tests: passcode verify, Esc-hold, comprehension check,
-                   # passage progression, scheduler math
+npm test           # unit tests: comprehension check, passage progression,
+                   # scheduler math, streak logic, update-check parsing
 npm run build      # production bundles into out/
 ```
 

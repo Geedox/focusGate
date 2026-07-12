@@ -6,10 +6,10 @@ import {
   type LockContext,
   type LockSessionState,
   type Mood,
-  type PasscodeAttemptResult,
   type ScheduleConfig,
   type ScriptureKind,
-  type SettingsView
+  type SettingsView,
+  type UnlockResult
 } from '@shared/ipc'
 
 /**
@@ -45,10 +45,6 @@ const api = {
     setSchedule: (config: ScheduleConfig): Promise<void> =>
       ipcRenderer.invoke(IPC.settingsSetSchedule, config)
   },
-  security: {
-    setPasscode: (current: string | null, next: string): Promise<PasscodeAttemptResult> =>
-      ipcRenderer.invoke(IPC.securitySetPasscode, current, next)
-  },
   lock: {
     getContext: (): Promise<LockContext> => ipcRenderer.invoke(IPC.lockGetContext),
     getSession: (): Promise<LockSessionState | null> => ipcRenderer.invoke(IPC.lockGetSession),
@@ -58,8 +54,9 @@ const api = {
       ipcRenderer.invoke(IPC.lockChooseCategory, categoryId),
     activityComplete: (mood: Mood | null): Promise<void> =>
       ipcRenderer.invoke(IPC.lockActivityComplete, mood),
-    verifyPasscode: (passcode: string): Promise<PasscodeAttemptResult> =>
-      ipcRenderer.invoke(IPC.lockVerifyPasscode, passcode),
+    unlock: (password: string): Promise<UnlockResult> =>
+      ipcRenderer.invoke(IPC.lockUnlock, password),
+    forceUnlock: (): Promise<void> => ipcRenderer.invoke(IPC.lockForceUnlock),
     devUnlock: (): Promise<void> => ipcRenderer.invoke(IPC.lockDevUnlock)
   }
 } as const
