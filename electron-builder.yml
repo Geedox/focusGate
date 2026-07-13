@@ -56,8 +56,18 @@ win:
   #     certificatePassword: ${env.WIN_CSC_PASSWORD}
 
 nsis:
-  oneClick: true
-  # Autostart is registered by the app itself on first run
+  # Assisted installer (visible wizard: welcome → install dir → progress →
+  # finish) rather than a silent one-click install. A silent install that
+  # hiccups leaves an orphaned Start Menu shortcut with no error shown — that
+  # is the "Unspecified error … GodFirst.lnk" some users hit. A visible wizard
+  # surfaces any problem instead of leaving a dead shortcut behind.
+  oneClick: false
+  # Install for all users into Program Files (one UAC prompt). More robust for
+  # shortcut creation than a per-user AppData install.
+  perMachine: true
+  allowToChangeInstallationDirectory: true
+  # Don't auto-launch on finish; the user starts it from the Start Menu /
+  # desktop shortcut. Autostart is registered by the app itself on first run
   # (app.setLoginItemSettings), not by the installer.
-  runAfterFinish: true
+  runAfterFinish: false
   deleteAppDataOnUninstall: false
