@@ -3,3 +3,14 @@
 /* Activity modules live outside the renderer root — tell Tailwind to scan
    them, or their classes silently vanish from the build. */
 @source '../../activities';
+
+/* Time inputs sit on a dark background, where the default (near-black) clock
+   icon is invisible. Invert it to white and make it clearly clickable. */
+.time-field::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.9;
+  cursor: pointer;
+}
+.time-field::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}

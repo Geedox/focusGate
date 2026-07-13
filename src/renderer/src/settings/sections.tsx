@@ -217,7 +217,17 @@ export function ScheduleSection({
             type="time"
             value={newTime}
             onChange={(e) => setNewTime(e.target.value)}
-            className={`${inputClass} px-2 py-1`}
+            // Open the time dropdown when the field itself is clicked (not only
+            // the small clock icon). showPicker() needs a user gesture — a
+            // click qualifies; guard the call in case it's already open.
+            onClick={(e) => {
+              try {
+                e.currentTarget.showPicker()
+              } catch {
+                /* already open / unsupported — ignore */
+              }
+            }}
+            className={`time-field ${inputClass} px-2 py-1`}
           />
           <button
             disabled={newTime.length === 0}

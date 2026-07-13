@@ -4,6 +4,18 @@ import { store } from './store'
 /** Passed to login-item launches so the app knows it was auto-started. */
 export const HIDDEN_FLAG = '--hidden'
 
+/**
+ * Windows quirk: `getLoginItemSettings()` only reports `openAtLogin: true`
+ * when queried with the SAME `args` the item was registered with. We register
+ * with `[HIDDEN_FLAG]`, so every read must pass it too — otherwise the toggle
+ * shows unchecked and re-checking it appears to do nothing (it re-registers,
+ * but the next read still compares against no-args and returns false).
+ * macOS ignores `args` here, so only send it on Windows.
+ */
+function loginItemQuery(): { args: string[] } | undefined {
+  return process.platform === 'win32' ? { args: [HIDDEN_FLAG] } : undefined
+}
+
 /** True when this process was launched by the OS at login (or with --hidden). */
 export function wasLaunchedHidden(): boolean {
   if (process.argv.includes(HIDDEN_FLAG)) return true
@@ -43,7 +55,7 @@ export function setAutostart(enabled: boolean): void {
 
   // Read back what the OS actually registered — surfaces silent failures
   // (e.g. macOS SMAppService refusing an app it can't re-launch).
-  const effective = app.getLoginItemSettings()
+  const effective = app.getLoginItemSettings(loginItemQuery())
   console.log(
     `[godfirst] login item requested=${enabled} os-reports=${effective.openAtLogin}`
   )
@@ -52,7 +64,7 @@ export function setAutostart(enabled: boolean): void {
 /** Effective state: the OS answer when packaged, the stored pref in dev. */
 export function isAutostartEnabled(): boolean {
   if (!app.isPackaged) return store.get('launchAtLogin')
-  return app.getLoginItemSettings().openAtLogin
+  return app.getLoginItemSettings(loginItemQuery()).openAtLogin
 }
 
 /**
