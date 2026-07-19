@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { SettingsView } from '@shared/ipc'
 import DonateButton from '../components/DonateButton'
+import FeedbackButton from '../components/FeedbackButton'
 import ShareStreakButton from '../components/ShareStreakButton'
 import {
   AutostartToggle,
@@ -83,6 +84,11 @@ export default function Settings(): React.JSX.Element {
         <p className="text-xs text-neutral-500">
           GodFirst is free, offline, and has no accounts or ads. If it helps you, you can support
           its continued development — <DonateButton className="text-neutral-400 hover:text-neutral-200" />
+        </p>
+        <p className="mt-2 text-xs text-neutral-500">
+          Got a bug, an idea, or a kind word?{' '}
+          <FeedbackButton className="text-neutral-400 hover:text-neutral-200" /> — it opens your mail
+          app.
         </p>
       </div>
     </div>

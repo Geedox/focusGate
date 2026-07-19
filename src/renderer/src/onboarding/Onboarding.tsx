@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { SettingsView } from '@shared/ipc'
 import DonateButton from '../components/DonateButton'
+import FeedbackButton from '../components/FeedbackButton'
 import { AutostartToggle, ReadingSection, ScheduleSection } from '../settings/sections'
 
 /**
@@ -133,7 +134,9 @@ export default function Onboarding(): React.JSX.Element {
             <p className="text-xs text-neutral-500">
               GodFirst is free and offline, with no accounts or ads. If it earns its keep, you
               can <DonateButton className="text-neutral-400 hover:text-neutral-200" /> anytime
-              from here or Settings.
+              from here or Settings — or{' '}
+              <FeedbackButton className="text-neutral-400 hover:text-neutral-200" /> if you hit a
+              snag or have an idea.
             </p>
           </div>
         )}

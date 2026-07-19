@@ -1,9 +1,11 @@
 import { app, ipcMain, shell } from 'electron'
 import {
   DONATION_URL,
+  FEEDBACK_MAILTO,
   IPC,
   type AppCommand,
   type DonateResult,
+  type FeedbackResult,
   type LockContext,
   type LockSessionState,
   type ScriptureSession,
@@ -135,14 +137,20 @@ export function registerIpcHandlers(): void {
     finishOnboarding()
   })
 
-  // Donate: opens the system browser. Never mid-lock — the overlay sits
-  // above everything, so a page opened now would be invisible; defer it to
-  // the moment the lock ends instead.
+  // Donate / Feedback: open in the system browser / mail app. Never mid-lock —
+  // the overlay sits above everything, so anything opened now would be
+  // invisible; defer it to the moment the lock ends instead.
   let donatePending = false
+  let feedbackPending = false
   lockEvents.on('changed', () => {
-    if (!isLocked() && donatePending) {
+    if (isLocked()) return
+    if (donatePending) {
       donatePending = false
       void shell.openExternal(DONATION_URL)
+    }
+    if (feedbackPending) {
+      feedbackPending = false
+      void shell.openExternal(FEEDBACK_MAILTO)
     }
   })
   // Share streak: the renderer draws the card (canvas); main puts the PNG on
@@ -167,6 +175,16 @@ export function registerIpcHandlers(): void {
       return { deferred: true }
     }
     void shell.openExternal(DONATION_URL)
+    return { deferred: false }
+  })
+
+  // Feedback: opens the user's mail app pre-addressed to the maintainer.
+  ipcMain.handle(IPC.appFeedback, (): FeedbackResult => {
+    if (isLocked()) {
+      feedbackPending = true
+      return { deferred: true }
+    }
+    void shell.openExternal(FEEDBACK_MAILTO)
     return { deferred: false }
   })
 

@@ -3,6 +3,7 @@ import type { Mood, ScriptureSession } from '@shared/ipc'
 import { MOODS } from '@shared/ipc'
 import { useFacePresence } from '@renderer/lock/facePresence'
 import DonateButton from '@renderer/components/DonateButton'
+import FeedbackButton from '@renderer/components/FeedbackButton'
 import ShareStreakButton from '@renderer/components/ShareStreakButton'
 import type { ActivityContext, ActivityModule } from '../types'
 import { checkAnswers, pickBlanks, splitWords } from './blanks'
@@ -349,6 +350,7 @@ function MoodPanel({
 
       <div className="mt-8 flex items-center gap-3">
         <DonateButton variant="button" />
+        <FeedbackButton variant="button" />
         <button
           data-testid="unlock-screen"
           onClick={unlock}

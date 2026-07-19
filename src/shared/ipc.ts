@@ -11,6 +11,7 @@ export const IPC = {
   settingsSetSchedule: 'settings:set-schedule',
   appCommand: 'app:command',
   appDonate: 'app:donate',
+  appFeedback: 'app:feedback',
   appShareStreak: 'app:share-streak',
   onboardingFinish: 'onboarding:finish',
   openAccessibilitySettings: 'app:open-accessibility-settings',
@@ -43,10 +44,23 @@ export const PLAN_CATEGORY_ID = 'plan'
  */
 export const DONATION_URL = 'https://merchant.buypowermfb.net/pay/godfirst-donations-1783667607864'
 
+/**
+ * Where the Feedback button sends people. A plain `mailto:` — GodFirst is
+ * offline and runs no server, so feedback opens the user's own mail app
+ * pre-addressed to the maintainer. No form, no backend, no data collection.
+ */
+export const FEEDBACK_EMAIL = 'usorohdev@gmail.com'
+export const FEEDBACK_MAILTO = `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(
+  'GodFirst feedback'
+)}`
+
 export interface DonateResult {
   /** True when locked: the page opens right after the screen unlocks. */
   deferred: boolean
 }
+
+/** Same shape as DonateResult: the mail app opens now, or deferred past a lock. */
+export type FeedbackResult = DonateResult
 
 /** Simple actions the settings/onboarding windows can ask main to perform. */
 export type AppCommand = 'lock-now' | 'pause-1h' | 'resume-schedule' | 'quit'
