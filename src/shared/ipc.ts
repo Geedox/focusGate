@@ -18,6 +18,8 @@ export const IPC = {
   openCameraSettings: 'app:open-camera-settings',
   openDownloadPage: 'app:open-download-page',
   settingsSetUpdateCheck: 'settings:set-update-check',
+  settingsSetPostponeWhileSharing: 'settings:set-postpone-while-sharing',
+  openScreenRecordingSettings: 'app:open-screen-recording-settings',
   lockGetContext: 'lock:get-context',
   lockGetSession: 'lock:get-session',
   lockChooseScripture: 'lock:choose-scripture',
@@ -154,7 +156,16 @@ export interface StoreSchema extends AppSettings {
   updateCheckEnabled: boolean
   /** Newer version detected by the check (e.g. "0.2.0"); null = up to date. */
   availableUpdate: string | null
+  /**
+   * When a lock is due while the screen is being shared (a call, a
+   * presentation, a recording), wait SHARING_POSTPONE_MS and check again
+   * instead of interrupting it.
+   */
+  postponeWhileSharing: boolean
 }
+
+/** How long a due lock waits when the screen is being shared, per check. */
+export const SHARING_POSTPONE_MS = 20 * 60_000
 
 export const DEFAULT_STORE: StoreSchema = {
   // launchAtLogin defaults to on — the app's whole point is being there on a
@@ -181,7 +192,8 @@ export const DEFAULT_STORE: StoreSchema = {
   activeUseMs: 0,
   onboardingComplete: false,
   updateCheckEnabled: true,
-  availableUpdate: null
+  availableUpdate: null,
+  postponeWhileSharing: true
 }
 
 /** Reading-plan summary for the settings UI. */
@@ -209,6 +221,13 @@ export interface SettingsView {
   updateCheckEnabled: boolean
   availableUpdate: string | null
   appVersion: string
+  postponeWhileSharing: boolean
+  /**
+   * What screen-share detection can see here: 'full' = sharing apps AND the
+   * "you are sharing" bars of browsers/Teams; 'apps-only' = macOS without
+   * Screen Recording permission, where only apps like Zoom are detectable.
+   */
+  screenShareDetection: 'full' | 'apps-only'
 }
 
 /** One verse as shown in a lock session. */

@@ -1,7 +1,13 @@
 import { app, BrowserWindow } from 'electron'
 import { writeFileSync } from 'node:fs'
 import { endLock, isLocked, startLock } from './lock'
-import { getSchedulerStatus, pauseForOneHour, rescheduleFromConfig, resumeSchedule } from './scheduler'
+import {
+  clearSharingDeferral,
+  getSchedulerStatus,
+  pauseForOneHour,
+  rescheduleFromConfig,
+  resumeSchedule
+} from './scheduler'
 import { finishOnboarding } from './onboarding-window'
 import { openSettingsWindow } from './settings-window'
 import { PRELOAD_PATH, loadRenderer } from './windows'
@@ -183,6 +189,39 @@ export function maybeRunAutotest(): void {
         pass('schedule fire → pause holds → resume catch-up, exactly once each')
       }), 4000)
     }), 4000)
+  } else if (mode === 'sharing') {
+    // Screen-share postponement (run with GODFIRST_TICK_MS=300,
+    // GODFIRST_FAKE_IDLE=0, GODFIRST_FAKE_SHARING=1): a 2-second usage
+    // threshold comes due while "sharing" → no lock, status shows the hold.
+    // Flip the fake to "not sharing" and lift the hold → the held trigger
+    // fires on the next tick.
+    store.set('pausedUntil', null)
+    store.set('activeUseMs', 0)
+    store.set('postponeWhileSharing', true)
+    store.set('schedule', { times: [], intervalHours: null, activeUseHours: 2 / 3600 })
+    rescheduleFromConfig()
+    const cleanup = (): void => {
+      store.set('schedule', { times: [], intervalHours: null, activeUseHours: 3 })
+    }
+    setTimeout(() => step(() => {
+      if (isLocked()) {
+        cleanup()
+        return fail('lock fired although the screen was being shared')
+      }
+      const held = getSchedulerStatus().sharingDeferredUntil
+      if (held === null || held < Date.now() + 15 * 60_000) {
+        cleanup()
+        return fail(`sharing hold not recorded (sharingDeferredUntil=${held})`)
+      }
+      process.env['GODFIRST_FAKE_SHARING'] = '0'
+      clearSharingDeferral() // as if the 20 minutes had passed
+      setTimeout(() => step(() => {
+        const fired = isLocked()
+        cleanup()
+        if (!fired) return fail('held trigger did not fire once sharing stopped')
+        pass('due lock held while sharing, fired once sharing stopped')
+      }), 2000)
+    }), 5000)
   } else if (mode === 'usage') {
     // Usage trigger: with GODFIRST_TICK_MS=300 and GODFIRST_FAKE_IDLE=0
     // (simulated constant activity), a 2-second threshold must fire a lock

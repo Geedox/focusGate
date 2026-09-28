@@ -17,7 +17,13 @@ import { endLock, isLocked, lockEvents, startLock } from './lock'
 import { finishOnboarding } from './onboarding-window'
 import { osUsername, verifyOsPassword } from './os-auth'
 import { parseTimeOfDay } from './schedule-core'
-import { pauseForOneHour, rescheduleFromConfig, resumeSchedule } from './scheduler'
+import {
+  clearSharingDeferral,
+  pauseForOneHour,
+  rescheduleFromConfig,
+  resumeSchedule
+} from './scheduler'
+import { screenShareCapability } from './screen-share'
 import { DOWNLOAD_PAGE, getAvailableUpdate } from './update-check'
 import {
   chooseCategory,
@@ -58,8 +64,23 @@ export function registerIpcHandlers(): void {
       streak: currentStreak(),
       updateCheckEnabled: store.get('updateCheckEnabled'),
       availableUpdate: getAvailableUpdate(),
-      appVersion: app.getVersion()
+      appVersion: app.getVersion(),
+      postponeWhileSharing: store.get('postponeWhileSharing'),
+      screenShareDetection: screenShareCapability().level
     }
+  })
+
+  ipcMain.handle(IPC.settingsSetPostponeWhileSharing, (_event, enabled: unknown): void => {
+    if (typeof enabled !== 'boolean') return
+    store.set('postponeWhileSharing', enabled)
+    if (!enabled) clearSharingDeferral() // a lock held back for sharing fires on the next tick
+  })
+
+  ipcMain.handle(IPC.openScreenRecordingSettings, (): void => {
+    if (process.platform !== 'darwin') return
+    void shell.openExternal(
+      'x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture'
+    )
   })
 
   ipcMain.handle(IPC.settingsSetUpdateCheck, (_event, enabled: unknown): void => {

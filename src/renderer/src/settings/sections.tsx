@@ -178,6 +178,50 @@ export function PlanSection({
   )
 }
 
+export function ScreenSharingSection({
+  view,
+  onChanged
+}: {
+  view: SettingsView
+  onChanged: () => void
+}): React.JSX.Element {
+  const isMac = window.godfirst.platform === 'darwin'
+  return (
+    <div className="flex flex-col gap-2">
+      <label className="flex cursor-pointer items-center justify-between text-sm">
+        <span>
+          Don't lock while I'm sharing my screen
+          <span className="ml-2 block text-xs text-neutral-500">
+            If a lock is due during a call, presentation or recording, GodFirst waits 20 minutes
+            and checks again, as often as needed. Once you stop sharing, the lock goes ahead.
+          </span>
+        </span>
+        <input
+          type="checkbox"
+          checked={view.postponeWhileSharing}
+          onChange={(e) => {
+            void window.godfirst.settings.setPostponeWhileSharing(e.target.checked).then(onChanged)
+          }}
+          className="h-4 w-4 shrink-0 accent-neutral-300"
+        />
+      </label>
+      {view.postponeWhileSharing && isMac && view.screenShareDetection === 'apps-only' && (
+        <p className="text-xs leading-relaxed text-neutral-500">
+          On this Mac, sharing is recognised in apps like Zoom. To also recognise sharing from a
+          browser (Google Meet) or Teams, allow GodFirst under{' '}
+          <button
+            onClick={() => void window.godfirst.app.openScreenRecordingSettings()}
+            className="underline hover:text-neutral-300"
+          >
+            System Settings → Privacy &amp; Security → Screen &amp; System Audio Recording
+          </button>
+          . GodFirst only reads window titles to spot a share; it never records anything.
+        </p>
+      )}
+    </div>
+  )
+}
+
 export function ScheduleSection({
   schedule,
   onChanged
@@ -295,7 +339,7 @@ export function UpdateSection({
         <span>
           Check for updates once a day
           <span className="ml-2 block text-xs text-neutral-500">
-            The app's only network use: it fetches the latest version number \u2014 nothing about
+            The app's only network use: it fetches the latest version number — nothing about
             you is ever sent. Turn it off for a fully offline app.
           </span>
         </span>

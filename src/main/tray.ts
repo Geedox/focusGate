@@ -41,6 +41,9 @@ function statusLabel(): string {
   if (status.pausedUntil !== null) {
     return `GodFirst — paused until ${formatTime(status.pausedUntil)}`
   }
+  if (status.sharingDeferredUntil !== null) {
+    return `GodFirst — screen sharing, lock postponed to ${formatTime(status.sharingDeferredUntil)}`
+  }
   const parts: string[] = []
   if (status.nextFireAt !== null) parts.push(`next lock ${formatTime(status.nextFireAt)}`)
   if (status.usageRemainingMs !== null) {

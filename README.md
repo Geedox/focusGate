@@ -53,6 +53,16 @@ and licenses: [NOTICES.md](NOTICES.md).
   matter how long the machine slept. "Pause for 1 hour" in the tray;
   triggers crossed while paused fire once when the pause ends. The tray
   shows both the next clock lock and the remaining active-use time.
+- **Screen-share aware** — a lock that comes due while you're sharing your
+  screen (a call, a presentation, a recording) is held for 20 minutes and
+  re-checked, as often as needed, then fires once the share ends. Detection
+  is two-fold (`src/main/screen-share.ts`): helper processes that only exist
+  during a share (Zoom's `CptHost`, Apple Screen Sharing) and the "you are
+  sharing your screen" indicator windows of Chrome/Edge/Teams/Slack. On
+  macOS the second signal needs Screen Recording permission (Electron can't
+  list other apps' windows without it — and it is never prompted for, since
+  a prompt behind a lock overlay would be unanswerable); Settings explains
+  this and links to the pane. Fails open: a broken check never postpones.
 - **Safety design** — *fail open, never fail locked*: any error tears the
   overlay down. The break-glass escape is **your own OS login password** —
   the same one you use to sign into the machine — verified live at unlock
@@ -109,6 +119,7 @@ GODFIRST_AUTOTEST=activity npx electron out/main/index.js       # category → r
 GODFIRST_AUTOTEST=face-check npx electron out/main/index.js     # wasm+model served to renderer, CSP allows wasm
 GODFIRST_AUTOTEST=schedule GODFIRST_TICK_MS=300 npx electron out/main/index.js  # fire → pause → resume catch-up
 GODFIRST_AUTOTEST=usage GODFIRST_TICK_MS=300 GODFIRST_FAKE_IDLE=0 npx electron out/main/index.js  # active-use trigger
+GODFIRST_AUTOTEST=sharing GODFIRST_TICK_MS=300 GODFIRST_FAKE_IDLE=0 GODFIRST_FAKE_SHARING=1 npx electron out/main/index.js  # held while sharing, fires after
 ```
 
 Add `GODFIRST_AUTOTEST_SHOT=/path/x.png` to `cycle`/`window-shot`, or use

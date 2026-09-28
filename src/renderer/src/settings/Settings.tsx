@@ -9,7 +9,8 @@ import {
   UpdateSection,
   PlanSection,
   ReadingSection,
-  ScheduleSection
+  ScheduleSection,
+  ScreenSharingSection
 } from './sections'
 
 export default function Settings(): React.JSX.Element {
@@ -68,6 +69,7 @@ export default function Settings(): React.JSX.Element {
       <CameraSection view={view} onChanged={reload} />
       <UpdateSection view={view} onChanged={reload} />
       <ScheduleSection schedule={view.schedule} onChanged={reload} />
+      <ScreenSharingSection view={view} onChanged={reload} />
 
       <div>
         <h2 className="text-sm font-medium">Emergency unlock</h2>
