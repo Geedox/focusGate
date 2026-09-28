@@ -16,7 +16,8 @@ import { store } from './store'
  */
 
 const RELEASES_API = 'https://api.github.com/repos/Geedox/focusGate/releases/latest'
-export const DOWNLOAD_PAGE = 'https://godfirst.me'
+// The install guide: it walks through the Gatekeeper / SmartScreen warnings.
+export const DOWNLOAD_PAGE = 'https://godfirst.me/download'
 
 const FIRST_CHECK_DELAY_MS = Number(process.env['GODFIRST_UPDATE_DELAY_MS'] ?? 15_000)
 const RECHECK_INTERVAL_MS = 24 * 3_600_000
